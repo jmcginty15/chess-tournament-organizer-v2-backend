@@ -225,7 +225,17 @@ class IndTournament {
         const entries = entryRes.rows;
 
         const pairings = generatePairings(entries, nextRound);
-        return pairings;
+        const games = [];
+
+        for (let pairing of pairings) {
+            const gameRes = await db.query(`INSERT INTO ind_games (white, black, tournament)
+                VALUES ($1, $2, $3)
+                RETURNING id, white, black, tournament, result`,
+                [pairing.white.id, pairing.black.id, id]);
+            games.push(gameRes.rows[0]);
+        }
+
+        return games;
     }
 }
 

@@ -13,7 +13,9 @@ const {
     assignTeams,
     averageRating
 } = require('../helpers/tournaments');
+const { generateGames } = require('../helpers/matches');
 const { updateIndRating } = require('../helpers/entries');
+const Team = require('./team');
 
 class TeamTournament {
     static async create({
@@ -200,11 +202,12 @@ class TeamTournament {
 
         const teamCount = entries.length / tournament.teamSize;
         const teams = assignTeams(entries, teamCount);
-        
+
         const finalTeams = [];
         for (let i = 0; i < teams.length; i++) {
+            let teamRes = null;
             if (i === 0) {
-                const teamRes = await db.query(`UPDATE teams
+                teamRes = await db.query(`UPDATE teams
                     SET rating = $1
                     WHERE tournament = $2
                     RETURNING
@@ -221,7 +224,7 @@ class TeamTournament {
                     [averageRating(teams[i]), id]);
                 finalTeams.push(teamRes.rows[0]);
             } else {
-                const teamRes = await db.query(`INSERT INTO teams (name, tournament, rating, seed, score, sonneborn_berger_score, place, prev_opponents, prev_colors)
+                teamRes = await db.query(`INSERT INTO teams (name, tournament, rating, seed, score, sonneborn_berger_score, place, prev_opponents, prev_colors)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     RETURNING
                         id,
@@ -236,6 +239,13 @@ class TeamTournament {
                         prev_colors AS "prevColors"`,
                     [`Team ${String.fromCharCode(i + 65)}`, id, averageRating(teams[i]), 0, 0, 0, 0, '', '']);
                 finalTeams.push(teamRes.rows[0]);
+            }
+
+            for (let entry of teams[i]) {
+                await db.query(`UPDATE team_entries
+                    SET team = $1
+                    WHERE id = $2`,
+                    [teamRes.rows[0].id, entry.id]);
             }
         }
 
@@ -303,7 +313,29 @@ class TeamTournament {
                 delete pairing.black;
             }
         }
-        return pairings;
+
+        const matches = [];
+        for (let pairing of pairings) {
+            const matchRes = await db.query(`INSERT INTO team_matches (team_1, team_2)
+                VALUES ($1, $2)
+                RETURNING id, team_1 AS "team1", team_2 AS "team2", result`,
+                [pairing.team1.id, pairing.team2.id]);
+            matches.push(matchRes.rows[0]);
+        }
+
+        for (let match of matches) {
+            const team1 = await Team.getById(match.team1);
+            const team2 = await Team.getById(match.team2);
+            const games = generateGames(team1, team2);
+            match.games = games;
+
+            for (let game of games) {
+                await db.query(`INSERT INTO team_games (white, black)
+                    VALUES ($1, $2)`, [game.white.id, game.black.id]);
+            }
+        }
+
+        return matches;
     }
 }
 

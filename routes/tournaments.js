@@ -97,8 +97,8 @@ router.post('/ind/:id/initialize', async function (req, res, next) {
         const { id } = req.params;
         await IndTournament.updateAllRatings(id);
         await IndTournament.assignSeeds(id);
-        const result = await IndTournament.generateNextRound(id);
-        return res.json({ result });
+        const games = await IndTournament.generateNextRound(id);
+        return res.json({ games: games });
     } catch (err) {
         return next(err);
     }
@@ -107,11 +107,11 @@ router.post('/ind/:id/initialize', async function (req, res, next) {
 router.post('/team/:id/initialize', async function (req, res, next) {
     try {
         const { id } = req.params;
-        // await TeamTournament.updateAllRatings(id);
-        // await TeamTournament.assignTeams(id);
-        // await TeamTournament.assignSeeds(id);
-        const result = await TeamTournament.generateNextRound(id);
-        return res.json({ result });
+        await TeamTournament.updateAllRatings(id);
+        await TeamTournament.assignTeams(id);
+        await TeamTournament.assignSeeds(id);
+        const matches = await TeamTournament.generateNextRound(id);
+        return res.json({ matches: matches });
     } catch (err) {
         return next(err);
     }

@@ -101,9 +101,16 @@ const generatePairings = (entries, nextRound) => {
 
             // if e1 has already played nextEntry, it is not an allowable pairing
             // increment the index and continue to the next entry
-            if (prevOpponents.indexOf(nextEntry.player) !== -1) {
-                i++;
-                continue;
+            if (nextEntry.player) {
+                if (prevOpponents.indexOf(nextEntry.player) !== -1) {
+                    i++;
+                    continue;
+                }
+            } else {
+                if (prevOpponents.indexOf(nextEntry.id.toString()) !== -1) {
+                    i++;
+                    continue;
+                }
             }
 
             // if the color balances for each player are not compatible, it is not an allowable pairing
@@ -134,8 +141,13 @@ const generatePairings = (entries, nextRound) => {
         const p1 = pairing[0];
         const p2 = pairing[1];
 
-        p1.prevOpponents += `${comma}${p2.player}`;
-        p2.prevOpponents += `${comma}${p1.player}`;
+        if (p1.player && p2.player) {
+            p1.prevOpponents += `${comma}${p2.player}`;
+            p2.prevOpponents += `${comma}${p1.player}`;
+        } else {
+            p1.prevOpponents += `${comma}${p2.id}`;
+            p2.prevOpponents += `${comma}${p1.id}`;
+        }
 
         // if color balances are unequal, give the white pieces to the player with the lesser color balance
         if (p1.colorBalance > p2.colorBalance) {
@@ -155,9 +167,8 @@ const generatePairings = (entries, nextRound) => {
             finalPairings.push({ white: p1, black: p2 });
             p1.prevColors += `${comma}W`;
             p2.prevColors += `${comma}B`;
-        }
-        // give the white pieces to the lower ranked player on rounds 2, 3, 6, 7, 10, 11, 14, ...
-        else {
+        } else {
+            // give the white pieces to the lower ranked player on rounds 2, 3, 6, 7, 10, 11, 14, ...
             finalPairings.push({ white: p2, black: p1 });
             p1.prevColors += `${comma}B`;
             p2.prevColors += `${comma}W`;
