@@ -1,0 +1,149 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "title": "The root schema",
+    "description": "The root schema comprises the entire JSON document.",
+    "default": {},
+    "examples": [
+        {
+            "director": "jmcginty15",
+            "name": "Inaugural OGB Online Team Championship",
+            "timeControl": "30|30",
+            "minPlayers": 20,
+            "maxPlayers": 32,
+            "teamSize": 4,
+            "rounds": 4,
+            "roundLength": 7,
+            "registrationOpen": "2020-10-31T18:00:00Z",
+            "registrationClose": "2020-11-06T18:00:00Z",
+            "startDate": "2020-11-06T18:00:00Z"
+        }
+    ],
+    "required": [
+        "director",
+        "name",
+        "timeControl",
+        "minPlayers",
+        "maxPlayers",
+        "teamSize",
+        "rounds",
+        "roundLength",
+        "registrationOpen",
+        "registrationClose",
+        "startDate"
+    ],
+    "properties": {
+        "director": {
+            "$id": "#/properties/director",
+            "type": "string",
+            "title": "The director schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "jmcginty15"
+            ]
+        },
+        "name": {
+            "$id": "#/properties/name",
+            "type": "string",
+            "title": "The name schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "Inaugural OGB Online Team Championship"
+            ]
+        },
+        "timeControl": {
+            "$id": "#/properties/timeControl",
+            "type": "string",
+            "title": "The timeControl schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "30|30"
+            ]
+        },
+        "minPlayers": {
+            "$id": "#/properties/minPlayers",
+            "type": "integer",
+            "title": "The minPlayers schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": 0,
+            "examples": [
+                20
+            ]
+        },
+        "maxPlayers": {
+            "$id": "#/properties/maxPlayers",
+            "type": "integer",
+            "title": "The maxPlayers schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": 0,
+            "examples": [
+                32
+            ]
+        },
+        "teamSize": {
+            "$id": "#/properties/teamSize",
+            "type": "integer",
+            "title": "The teamSize schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": 0,
+            "examples": [
+                4
+            ]
+        },
+        "rounds": {
+            "$id": "#/properties/rounds",
+            "type": "integer",
+            "title": "The rounds schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": 0,
+            "examples": [
+                4
+            ]
+        },
+        "roundLength": {
+            "$id": "#/properties/roundLength",
+            "type": "integer",
+            "title": "The roundLength schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": 0,
+            "examples": [
+                7
+            ]
+        },
+        "registrationOpen": {
+            "$id": "#/properties/registrationOpen",
+            "type": "string",
+            "title": "The registrationOpen schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "2020-10-31T18:00:00Z"
+            ]
+        },
+        "registrationClose": {
+            "$id": "#/properties/registrationClose",
+            "type": "string",
+            "title": "The registrationClose schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "2020-11-06T18:00:00Z"
+            ]
+        },
+        "startDate": {
+            "$id": "#/properties/startDate",
+            "type": "string",
+            "title": "The startDate schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "2020-11-06T18:00:00Z"
+            ]
+        }
+    },
+    "additionalProperties": true
+}

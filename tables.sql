@@ -26,6 +26,7 @@ CREATE TABLE ind_tournaments (
   max_players INT,
   rounds INT,
   round_length INT,
+  current_round INT,
   registration_open TIMESTAMPTZ,
   registration_close TIMESTAMPTZ,
   start_date TIMESTAMPTZ
@@ -63,6 +64,7 @@ CREATE TABLE team_tournaments (
   team_size INT,
   rounds INT,
   round_length INT,
+  current_round INT,
   registration_open TIMESTAMPTZ,
   registration_close TIMESTAMPTZ,
   start_date TIMESTAMPTZ
@@ -76,6 +78,7 @@ CREATE TABLE teams (
   seed INT,
   score FLOAT,
   sonneborn_berger_score FLOAT,
+  place INT,
   prev_opponents TEXT,
   prev_colors TEXT
 );
