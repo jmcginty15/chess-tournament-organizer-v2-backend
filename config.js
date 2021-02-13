@@ -3,7 +3,7 @@
 const SECRET_KEY = process.env.SECRET_KEY || 'greek-gift';
 const BCRYPT_WORK_FACTOR = 13;
 const PORT = 3001;
-const API_URL = 'https://lichess.org/api';
+const API_URL = 'https://lichess.org';
 
 let DB_URI = `postgresql://`;
 

@@ -31,7 +31,6 @@ class User {
         if (dupEmailCheck.rows.length) throw new ExpressError('Duplicate email', 400);
 
         const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-        console.log(hashedPassword);
         const userResult = await db.query(`INSERT INTO users (username, email, password, first_name, last_name)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING

@@ -4,7 +4,7 @@ const TeamTournament = require('../models/team_tournament');
 const jsonschema = require('jsonschema');
 const newIndTournamentSchema = require('../schemas/indTournamentNew.json');
 const newTeamTournamentSchema = require('../schemas/teamTournamentNew.json');
-const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth');
+const { ensureLoggedIn, ensureCorrectUser, ensureTournamentDirector } = require('../middleware/auth');
 
 const ExpressError = require('../expressError');
 
@@ -92,13 +92,13 @@ router.post('/team/:id/:username/enter', ensureCorrectUser, async function (req,
     }
 });
 
-router.post('/ind/:id/initialize', async function (req, res, next) {
+router.post('/ind/:id/initialize', ensureTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
         await IndTournament.updateAllRatings(id);
         await IndTournament.assignSeeds(id);
-        const games = await IndTournament.generateNextRound(id);
-        return res.json({ games: games });
+        const tournament = await IndTournament.generateNextRound(id);
+        return res.json({ tournament: tournament });
     } catch (err) {
         return next(err);
     }

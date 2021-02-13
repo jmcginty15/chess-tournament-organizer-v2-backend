@@ -92,8 +92,22 @@ class IndTournament {
                 prev_opponents AS "prevOpponents",
                 prev_colors AS "prevColors"
             FROM ind_entries
-            WHERE tournament = $1`, [id]);
+            WHERE tournament = $1
+            ORDER BY place`, [id]);
         tournament.entries = entryRes.rows;
+
+        const gameRes = await db.query(`SELECT
+                id,
+                round,
+                white,
+                black,
+                result,
+                url,
+                schedule
+            FROM ind_games
+            WHERE tournament = $1
+            ORDER BY schedule, id`, [id]);
+        tournament.games = gameRes.rows;
 
         if (tournament) return tournament;
 
@@ -109,7 +123,7 @@ class IndTournament {
         const user = userRes.rows[0];
         if (!user) throw new ExpressError(`User ${username} not found`, 404);
 
-        const lichessUserRes = await axios.get(`${API_URL}/user/${username}`);
+        const lichessUserRes = await axios.get(`${API_URL}/api/user/${username}`);
         const ratings = lichessUserRes.data.perfs;
 
         const rating = getRating(ratings, tournament.category);
@@ -224,18 +238,40 @@ class IndTournament {
             ORDER BY place ASC`, [id]);
         const entries = entryRes.rows;
 
-        const pairings = generatePairings(entries, nextRound);
+        const pairings = generatePairings([...entries], nextRound);
         const games = [];
 
         for (let pairing of pairings) {
-            const gameRes = await db.query(`INSERT INTO ind_games (white, black, tournament)
-                VALUES ($1, $2, $3)
-                RETURNING id, white, black, tournament, result`,
-                [pairing.white.id, pairing.black.id, id]);
+            const gameRes = await db.query(`INSERT INTO ind_games (round, white, black, tournament)
+                VALUES ($1, $2, $3, $4)
+                RETURNING id, round, white, black, tournament, result`,
+                [nextRound, pairing.white.id, pairing.black.id, id]);
             games.push(gameRes.rows[0]);
         }
 
-        return games;
+        const finalTournRes = await db.query(`UPDATE ind_tournaments
+            SET current_round = $1
+            WHERE id = $2
+            RETURNING
+                id,
+                director,
+                name,
+                time_control AS "timeControl",
+                category,
+                min_players AS "minPlayers",
+                max_players AS "maxPlayers",
+                rounds,
+                round_length AS "roundLength",
+                current_round AS "currentRound",
+                registration_open AS "registrationOpen",
+                registration_close AS "registrationClose",
+                start_date AS "startDate"`,
+            [nextRound, id]);
+        const tournament = finalTournRes.rows[0];
+        tournament.games = games;
+        tournament.entries = entries;
+
+        return tournament;
     }
 }
 

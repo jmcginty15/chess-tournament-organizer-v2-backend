@@ -55,6 +55,12 @@ class TeamTournament {
                 start_date AS "startDate"`,
             [director, name, timeControl, category, minPlayers, maxPlayers, teamSize, rounds, roundLength, 0, registrationOpen, registrationClose, startDate]);
         const tournament = res.rows[0];
+        tournament.teams = [];
+
+        await db.query(`INSERT INTO teams (name, tournament, rating, seed, score, sonneborn_berger_score, place, prev_opponents, prev_colors)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            ['Team A', tournament.id, 0, 0, 0, 0, 0, '', '']);
+
         return tournament;
     }
 
@@ -98,13 +104,28 @@ class TeamTournament {
 
         if (!tournament) throw new ExpressError(`Tournament id ${id} not found`, 404);
 
-        if (!tournament.currentWeek) {
-            const entryRes = await db.query(`SELECT team_entries.id, team_entries.player, team_entries.rating
-                FROM team_entries
-                FULL JOIN teams ON teams.id = team_entries.team
-                WHERE tournament = $1`, [id]);
-            tournament.entries = entryRes.rows;
-        }
+        const entryRes = await db.query(`SELECT team_entries.id, team_entries.player, team_entries.rating
+            FROM team_entries
+            FULL JOIN teams ON teams.id = team_entries.team
+            WHERE tournament = $1
+            ORDER BY rating DESC`, [id]);
+        if (entryRes.rows[0].id) tournament.entries = entryRes.rows;
+        else tournament.entries = [];
+
+        const teamRes = await db.query(`SELECT
+                id,
+                name,
+                rating,
+                seed,
+                score,
+                sonneborn_berger_score AS "sonnebornBergerScore",
+                place,
+                prev_opponents AS "prevOpponents",
+                prev_colors AS "prevColors"
+            FROM teams
+            WHERE tournament = $1
+            ORDER BY score DESC, seed`, [id]);
+        tournament.teams = teamRes.rows;
 
         return tournament;
     }
@@ -118,7 +139,7 @@ class TeamTournament {
         const user = userRes.rows[0];
         if (!user) throw new ExpressError(`User ${username} not found`, 404);
 
-        const lichessUserRes = await axios.get(`${API_URL}/user/${username}`);
+        const lichessUserRes = await axios.get(`${API_URL}/api/user/${username}`);
         const ratings = lichessUserRes.data.perfs;
 
         const rating = getRating(ratings, tournament.category);
