@@ -22,7 +22,8 @@ INSERT INTO users (username, email, password, first_name, last_name)
          ('Bybster', 'bybster@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Jay', 'LII'),
          ('something', 'something@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Something', 'Something'),
          ('helloworld', 'hello_world@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Hello', 'World'),
-         ('EricRosen', 'eric_rosen@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Eric', 'Rosen');
+         ('EricRosen', 'eric_rosen@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Eric', 'Rosen'),
+         ('rando3', 'rando3@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Rando', 'Three');
 
 INSERT INTO ind_tournaments (director,
                              name,
@@ -147,4 +148,4 @@ INSERT INTO team_entries (player, team, rating)
          ('Bybster', 1, 1399),
          ('something', 1, 1565),
          ('helloworld', 1, 1877),
-         ('EricRosen', 1, 2301);
+         ('rando3', 1, 1500);

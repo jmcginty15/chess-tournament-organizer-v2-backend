@@ -95,8 +95,10 @@ CREATE TABLE team_entries (
 
 CREATE TABLE team_matches (
   id SERIAL PRIMARY KEY,
+  round INT,
   team_1 INT NOT NULL REFERENCES teams ON DELETE CASCADE,
   team_2 INT NOT NULL REFERENCES teams ON DELETE CASCADE,
+  tournament INT REFERENCES team_tournaments ON DELETE CASCADE,
   result TEXT
 );
 
@@ -104,6 +106,7 @@ CREATE TABLE team_games (
   id SERIAL PRIMARY KEY,
   white INT NOT NULL REFERENCES team_entries ON DELETE CASCADE,
   black INT NOT NULL REFERENCES team_entries ON DELETE CASCADE,
+  match INT REFERENCES team_matches ON DELETE CASCADE,
   result TEXT,
   url TEXT,
   schedule TIMESTAMPTZ

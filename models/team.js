@@ -1,4 +1,5 @@
 const db = require('../db');
+const ExpressError = require('../expressError');
 
 class Team {
     static async getById(id) {
@@ -24,6 +25,28 @@ class Team {
         team.members = entryRes.rows;
 
         return team;
+    }
+
+    static async rename(id, newName) {
+        const teamRes = await db.query(`UPDATE teams
+            SET name = $1
+            WHERE id = $2
+            RETURNING
+                id,
+                name,
+                tournament,
+                rating,
+                seed,
+                score,
+                sonneborn_berger_score AS "sonnebornBergerScore",
+                place,
+                prev_opponents AS "prevOpponents",
+                prev_colors AS "prevColors"`,
+            [newName, id]);
+        const team = teamRes.rows[0];
+
+        if (team) return team;
+        throw new ExpressError(`Team id ${id} not found`, 404);
     }
 }
 

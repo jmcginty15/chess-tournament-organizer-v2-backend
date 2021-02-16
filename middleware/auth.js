@@ -4,6 +4,8 @@ const ExpressError = require('../expressError');
 const IndTournament = require('../models/ind_tournament');
 const IntGame = require('../models/ind_game');
 const IndGame = require('../models/ind_game');
+const TeamGame = require('../models/team_game');
+const Team = require('../models/team');
 
 const authenticateJWT = (req, res, next) => {
     try {
@@ -57,4 +59,36 @@ const ensureGameParticipant = async (req, res, next) => {
     }
 }
 
-module.exports = { authenticateJWT, ensureLoggedIn, ensureCorrectUser, ensureTournamentDirector, ensureGameParticipant };
+const ensureTeamGameParticipant = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const participants = await TeamGame.getParticipants(id);
+        if (!req.user || (req.user.username !== participants.white.player && req.user.username !== participants.black.player)) {
+            throw new ExpressError('Unauthorized', 401);
+        }
+        return next();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+const ensureTeamMember = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const team = await Team.getById(id);
+        for (let member of team.members) if (member.player === req.user.username) return next();
+        throw new ExpressError('Unauthorized', 401);
+    } catch (err) {
+        return next(err);
+    }
+}
+
+module.exports = {
+    authenticateJWT,
+    ensureLoggedIn,
+    ensureCorrectUser,
+    ensureTournamentDirector,
+    ensureGameParticipant,
+    ensureTeamGameParticipant,
+    ensureTeamMember
+};

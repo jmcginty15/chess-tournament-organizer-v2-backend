@@ -104,14 +104,14 @@ router.post('/ind/:id/initialize', ensureTournamentDirector, async function (req
     }
 });
 
-router.post('/team/:id/initialize', async function (req, res, next) {
+router.post('/team/:id/initialize', ensureTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
         await TeamTournament.updateAllRatings(id);
         await TeamTournament.assignTeams(id);
         await TeamTournament.assignSeeds(id);
-        const matches = await TeamTournament.generateNextRound(id);
-        return res.json({ matches: matches });
+        const tournament = await TeamTournament.generateNextRound(id);
+        return res.json({ tournament: tournament });
     } catch (err) {
         return next(err);
     }

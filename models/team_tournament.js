@@ -127,6 +127,34 @@ class TeamTournament {
             ORDER BY score DESC, seed`, [id]);
         tournament.teams = teamRes.rows;
 
+        const matchRes = await db.query(`SELECT
+                id,
+                round,
+                team_1 AS "team1",
+                team_2 AS "team2",
+                tournament,
+                result
+            FROM team_matches
+            WHERE tournament = $1
+            ORDER BY id`, [id]);
+        const matches = matchRes.rows;
+
+        for (let match of matches) {
+            const gameRes = await db.query(`SELECT
+                    id,
+                    white,
+                    black,
+                    match,
+                    result,
+                    url,
+                    schedule
+                FROM team_games
+                WHERE match = $1
+                ORDER BY id`, [match.id]);
+            match.games = gameRes.rows;
+        }
+        tournament.matches = matches;
+
         return tournament;
     }
 
@@ -325,7 +353,7 @@ class TeamTournament {
             ORDER BY place ASC`, [id]);
         const teams = teamRes.rows;
 
-        const pairings = generatePairings(teams, nextRound);
+        const pairings = generatePairings([...teams], nextRound);
         for (let pairing of pairings) {
             if (!pairing.bye) {
                 pairing.team1 = pairing.white;
@@ -337,10 +365,10 @@ class TeamTournament {
 
         const matches = [];
         for (let pairing of pairings) {
-            const matchRes = await db.query(`INSERT INTO team_matches (team_1, team_2)
-                VALUES ($1, $2)
-                RETURNING id, team_1 AS "team1", team_2 AS "team2", result`,
-                [pairing.team1.id, pairing.team2.id]);
+            const matchRes = await db.query(`INSERT INTO team_matches (round, team_1, team_2, tournament)
+                VALUES ($1, $2, $3, $4)
+                RETURNING id, round, team_1 AS "team1", team_2 AS "team2", tournament, result`,
+                [nextRound, pairing.team1.id, pairing.team2.id, id]);
             matches.push(matchRes.rows[0]);
         }
 
@@ -351,12 +379,49 @@ class TeamTournament {
             match.games = games;
 
             for (let game of games) {
-                await db.query(`INSERT INTO team_games (white, black)
-                    VALUES ($1, $2)`, [game.white.id, game.black.id]);
+                await db.query(`INSERT INTO team_games (white, black, match)
+                    VALUES ($1, $2, $3)`, [game.white.id, game.black.id, match.id]);
             }
         }
 
-        return matches;
+        const finalTournRes = await db.query(`UPDATE team_tournaments
+            SET current_round = $1
+            WHERE id = $2
+            RETURNING
+                id,
+                director,
+                name,
+                time_control AS "timeControl",
+                category,
+                min_players AS "minPlayers",
+                max_players AS "maxPlayers",
+                team_size AS "teamSize",
+                rounds,
+                round_length AS "roundLength",
+                current_round AS "currentRound",
+                registration_open AS "registrationOpen",
+                registration_close AS "registrationClose",
+                start_date AS "startDate"`,
+            [nextRound, id]);
+
+        const tournament = finalTournRes.rows[0];
+
+        const entryRes = await db.query(`SELECT
+                team_entries.id,
+                team_entries.player,
+                team_entries.team,
+                team_entries.rating
+            FROM team_entries
+            FULL JOIN teams ON teams.id = team_entries.team
+            WHERE tournament = $1
+            ORDER BY rating DESC`, [id]);
+        const entries = entryRes.rows;
+
+        tournament.entries = entries;
+        tournament.teams = teams;
+        tournament.matches = matches;
+
+        return tournament;
     }
 }
 
