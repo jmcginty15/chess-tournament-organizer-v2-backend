@@ -2,7 +2,7 @@ const db = require('../db');
 const ExpressError = require('../expressError');
 const axios = require('axios');
 const { API_URL } = require('../config');
-const { batchify, unbatchify, delay, getCategory, getRating, assignInitialPlaces, generatePairings } = require('../helpers/tournaments');
+const { batchify, unbatchify, delay, getCategory, getRating, assignInitialPlaces, generatePairings, calculateSonnebornBergerScore } = require('../helpers/tournaments');
 const { updateIndRating } = require('../helpers/entries');
 
 class IndTournament {
@@ -23,8 +23,8 @@ class IndTournament {
         const category = getCategory(timeControl);
 
         const res = await db.query(`INSERT INTO ind_tournaments
-            (director, name, time_control, category, min_players, max_players, rounds, round_length, current_round, registration_open, registration_close, start_date)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            (director, name, time_control, category, min_players, max_players, rounds, round_length, current_round, registration_open, registration_close, start_date, started, ended)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             RETURNING
                 id,
                 director,
@@ -38,8 +38,10 @@ class IndTournament {
                 current_round AS "currentRound",
                 registration_open AS "registrationOpen",
                 registration_close AS "registrationClose",
-                start_date AS "startDate"`,
-            [director, name, timeControl, category, minPlayers, maxPlayers, rounds, roundLength, 0, registrationOpen, registrationClose, startDate]);
+                start_date AS "startDate",
+                started,
+                ended`,
+            [director, name, timeControl, category, minPlayers, maxPlayers, rounds, roundLength, 0, registrationOpen, registrationClose, startDate, 0, 0]);
         const tournament = res.rows[0];
         return tournament;
     }
@@ -76,7 +78,9 @@ class IndTournament {
                 current_round AS "currentRound",
                 registration_open AS "registrationOpen",
                 registration_close AS "registrationClose",
-                start_date AS "startDate"
+                start_date AS "startDate",
+                started,
+                ended
             FROM ind_tournaments WHERE id = $1`, [id]);
         const tournament = tournRes.rows[0];
 
@@ -214,6 +218,11 @@ class IndTournament {
             orderedEntries[i].place = nextRes.rows[0].place;
         }
 
+        await db.query(`UPDATE ind_tournaments
+            SET started = $1
+            WHERE id = $2`,
+            [1, id]);
+
         return orderedEntries;
     }
 
@@ -242,6 +251,15 @@ class IndTournament {
         const games = [];
 
         for (let pairing of pairings) {
+            await db.query(`UPDATE ind_entries
+                SET prev_opponents = $1, prev_colors = $2
+                WHERE id = $3`,
+                [pairing.white.prevOpponents, pairing.white.prevColors, pairing.white.id]);
+            await db.query(`UPDATE ind_entries
+                SET prev_opponents = $1, prev_colors = $2
+                WHERE id = $3`,
+                [pairing.black.prevOpponents, pairing.black.prevColors, pairing.black.id]);
+
             const gameRes = await db.query(`INSERT INTO ind_games (round, white, black, tournament)
                 VALUES ($1, $2, $3, $4)
                 RETURNING id, round, white, black, tournament, result`,
@@ -273,6 +291,129 @@ class IndTournament {
 
         return tournament;
     }
+
+    static async recordDoubleForfeits(id) {
+        const roundRes = await db.query(`SELECT current_round AS "currentRound"
+            FROM ind_tournaments
+            WHERE id = $1`, [id]);
+        const currentRound = roundRes.rows[0].currentRound;
+
+        const gameRes = await db.query(`UPDATE ind_games
+            SET result = $1
+            WHERE tournament = $2 AND round = $3 AND result IS NULL
+            RETURNING
+                id
+                round,
+                white,
+                black,
+                tournament,
+                result,
+                url,
+                schedule`,
+            ['0-0', id, currentRound]);
+        const games = gameRes.rows;
+
+        return games;
+    }
+
+    static async updatePlaces(id) {
+        const placeRes = await db.query(`SELECT id FROM ind_entries
+            WHERE tournament = $1
+            ORDER BY score DESC, seed`, [id]);
+        const entries = placeRes.rows;
+
+        for (let i = 0; i < entries.length; i++) {
+            const nextRes = await db.query(`UPDATE ind_entries
+                SET place = $1
+                WHERE id = $2
+                RETURNING place`,
+                [i + 1, entries[i].id]);
+            entries.place = nextRes.rows[0].place;
+        }
+
+        return entries;
+    }
+
+    static async calculateSonnebornBergerScores(id) {
+        const entryRes = await db.query(`SELECT
+                id,
+                player,
+                tournament,
+                seed,
+                rating,
+                score,
+                place
+            FROM ind_entries
+            WHERE tournament = $1`, [id]);
+        const entries = entryRes.rows;
+
+        const updatedEntries = [];
+        for (let entry of [...entries]) {
+            const gameRes = await db.query(`SELECT
+                    white,
+                    black,
+                    result
+                FROM ind_games
+                WHERE white = $1 OR black = $1`,
+                [entry.id]);
+            const games = gameRes.rows;
+
+            const score = await calculateSonnebornBergerScore(entry, [...games]);
+            entry.sonnebornBergerScore = score;
+            updatedEntries.push(entry);
+        }
+
+        for (let entry of updatedEntries) {
+            await db.query(`UPDATE ind_entries
+                SET sonneborn_berger_score = $1
+                WHERE id = $2`,
+                [entry.sonnebornBergerScore, entry.id]);
+        }
+    }
+
+    static async setFinalPlaces(id) {
+        const res = await db.query(`SELECT
+                id,
+                player,
+                tournament,
+                seed,
+                rating,
+                score,
+                sonneborn_berger_score AS "sonnebornBergerScore",
+                place,
+                prev_opponents AS "prevOpponents",
+                prev_colors AS "prevColors"
+            FROM ind_entries
+            WHERE tournament = $1
+            ORDER BY score DESC, sonneborn_berger_score DESC, seed ASC`, [id]);
+        const orderedEntries = res.rows;
+
+        const finalEntries = [];
+        for (let i = 0; i < orderedEntries.length; i++) {
+            const nextRes = await db.query(`UPDATE ind_entries
+                SET place = $1
+                WHERE id = $2
+                RETURNING
+                    id,
+                    player,
+                    tournament,
+                    seed,
+                    rating,
+                    score,
+                    sonneborn_berger_score AS "sonnebornBergerScore",
+                    place,
+                    prev_opponents AS "prevOpponents",
+                    prev_colors AS "prevColors"`,
+                [i + 1, orderedEntries[i].id]);
+            finalEntries.push(nextRes.rows[0]);
+        }
+
+        await db.query(`UPDATE ind_tournaments
+            SET ended = $1
+            WHERE id = $2`, [1, id])
+
+        return finalEntries;
+    }  
 }
 
 module.exports = IndTournament;

@@ -1,3 +1,6 @@
+const { cloneDeep } = require('lodash');
+const db = require('../db');
+
 const batchify = (entries, batchSize) => {
     const batches = [];
     while (entries.length > batchSize) batches.push(entries.splice(0, batchSize));
@@ -119,14 +122,25 @@ const generatePairings = (entries, nextRound) => {
             const nextPrevColors = nextEntry.prevColors.split(',');
             nextEntry.colorBalance = getColorBalance(nextPrevColors);
             let compatible = true;
-            if ((nextEntry.colorBalance === 2 && nextEntry.colorBalance > 0) || (nextEntry.colorBalance === 2 && nextEntry.colorBalance > 0)) compatible = false;
-            if ((nextEntry.colorBalance === -2 && nextEntry.colorBalance < 0) || (nextEntry.colorBalance === -2 && nextEntry.colorBalance < 0)) compatible = false;
+            if ((e1.colorBalance === 2 && nextEntry.colorBalance > 0) || (nextEntry.colorBalance === 2 && e1.colorBalance > 0)) compatible = false;
+            if ((e1.colorBalance === -2 && nextEntry.colorBalance < 0) || (nextEntry.colorBalance === -2 && e1.colorBalance < 0)) compatible = false;
             if (!compatible) {
                 i++;
                 continue;
             }
 
-            // if color balances are compatible, choose the current entry as the second of the pair
+            // if color balances are compatible,
+            // check if the rest of the entries can produce a valid set of pairings
+            // if not, it is not an allowable pairing
+            // increment the index and continue to the next entry
+            const remainingEntries = cloneDeep(entries);
+            remainingEntries.splice(i, 1);
+            if (remainingEntries.length > 0 && !isValid(remainingEntries, nextRound)) {
+                i++;
+                continue;
+            }
+
+            // if remainder is valid, choose the current entry as the second of the pair
             e2 = entries.splice(i, 1)[0];
             break;
         }
@@ -163,15 +177,17 @@ const generatePairings = (entries, nextRound) => {
 
         // if color balances are equal
         // give the white pieces to the higher ranked player on rounds 1, 4, 5, 8, 9, 12, 13, ...
-        if (nextRound % 4 === 0 || (nextRound - 1) % 4 === 0) {
-            finalPairings.push({ white: p1, black: p2 });
-            p1.prevColors += `${comma}W`;
-            p2.prevColors += `${comma}B`;
-        } else {
-            // give the white pieces to the lower ranked player on rounds 2, 3, 6, 7, 10, 11, 14, ...
-            finalPairings.push({ white: p2, black: p1 });
-            p1.prevColors += `${comma}B`;
-            p2.prevColors += `${comma}W`;
+        if (p1.colorBalance === p2.colorBalance) {
+            if (nextRound % 4 === 0 || (nextRound - 1) % 4 === 0) {
+                finalPairings.push({ white: p1, black: p2 });
+                p1.prevColors += `${comma}W`;
+                p2.prevColors += `${comma}B`;
+            } else {
+                // give the white pieces to the lower ranked player on rounds 2, 3, 6, 7, 10, 11, 14, ...
+                finalPairings.push({ white: p2, black: p1 });
+                p1.prevColors += `${comma}B`;
+                p2.prevColors += `${comma}W`;
+            }
         }
     }
 
@@ -222,6 +238,41 @@ const averageRating = (players) => {
     return sum / players.length;
 }
 
+const isValid = (entries, nextRound) => {
+    try {
+        generatePairings(entries, nextRound);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+const calculateSonnebornBergerScore = async (entry, games) => {
+    let sonnebornBergerScore = 0;
+
+    for (let game of games) {
+        if (game.white === entry.id) {
+            const oppRes = await db.query(`SELECT score
+                FROM ind_entries
+                WHERE id = $1`, [game.black]);
+            const opp = oppRes.rows[0];
+
+            if (game.result === '1-0') sonnebornBergerScore += opp.score;
+            else if (game.result === '0.5-0.5') sonnebornBergerScore += opp.score / 2;
+        } else if (game.black === entry.id) {
+            const oppRes = await db.query(`SELECT score
+                FROM ind_entries
+                WHERE id = $1`, [game.white]);
+            const opp = oppRes.rows[0];
+
+            if (game.result === '0-1') sonnebornBergerScore += opp.score;
+            else if (game.result === '0.5-0.5') sonnebornBergerScore += opp.score / 2;
+        }
+    }
+
+    return sonnebornBergerScore;
+}
+
 module.exports = {
     batchify,
     unbatchify,
@@ -231,5 +282,6 @@ module.exports = {
     assignInitialPlaces,
     generatePairings,
     assignTeams,
-    averageRating
+    averageRating,
+    calculateSonnebornBergerScore
 };

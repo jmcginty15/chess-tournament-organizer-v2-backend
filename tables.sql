@@ -29,7 +29,9 @@ CREATE TABLE ind_tournaments (
   current_round INT,
   registration_open TIMESTAMPTZ,
   registration_close TIMESTAMPTZ,
-  start_date TIMESTAMPTZ
+  start_date TIMESTAMPTZ,
+  started INT,
+  ended INT
 );
 
 CREATE TABLE ind_entries (
@@ -70,7 +72,9 @@ CREATE TABLE team_tournaments (
   current_round INT,
   registration_open TIMESTAMPTZ,
   registration_close TIMESTAMPTZ,
-  start_date TIMESTAMPTZ
+  start_date TIMESTAMPTZ,
+  started INT,
+  ended INT
 );
 
 CREATE TABLE teams (
