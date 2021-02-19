@@ -51,7 +51,7 @@ CREATE TABLE ind_games (
   id SERIAL PRIMARY KEY,
   round INT,
   white INT NOT NULL REFERENCES ind_entries ON DELETE CASCADE,
-  black INT NOT NULL REFERENCES ind_entries ON DELETE CASCADE,
+  black INT REFERENCES ind_entries ON DELETE CASCADE,
   tournament INT NOT NULL REFERENCES ind_tournaments ON DELETE CASCADE,
   result TEXT,
   url TEXT,
@@ -101,7 +101,7 @@ CREATE TABLE team_matches (
   id SERIAL PRIMARY KEY,
   round INT,
   team_1 INT NOT NULL REFERENCES teams ON DELETE CASCADE,
-  team_2 INT NOT NULL REFERENCES teams ON DELETE CASCADE,
+  team_2 INT REFERENCES teams ON DELETE CASCADE,
   tournament INT REFERENCES team_tournaments ON DELETE CASCADE,
   result TEXT
 );

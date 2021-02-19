@@ -252,13 +252,15 @@ const calculateSonnebornBergerScore = async (entry, games) => {
 
     for (let game of games) {
         if (game.white === entry.id) {
-            const oppRes = await db.query(`SELECT score
-                FROM ind_entries
-                WHERE id = $1`, [game.black]);
-            const opp = oppRes.rows[0];
+            if (game.black) {
+                const oppRes = await db.query(`SELECT score
+                    FROM ind_entries
+                    WHERE id = $1`, [game.black]);
+                const opp = oppRes.rows[0];
 
-            if (game.result === '1-0') sonnebornBergerScore += opp.score;
-            else if (game.result === '0.5-0.5') sonnebornBergerScore += opp.score / 2;
+                if (game.result === '1-0') sonnebornBergerScore += opp.score;
+                else if (game.result === '0.5-0.5') sonnebornBergerScore += opp.score / 2;
+            }
         } else if (game.black === entry.id) {
             const oppRes = await db.query(`SELECT score
                 FROM ind_entries
@@ -267,6 +269,38 @@ const calculateSonnebornBergerScore = async (entry, games) => {
 
             if (game.result === '0-1') sonnebornBergerScore += opp.score;
             else if (game.result === '0.5-0.5') sonnebornBergerScore += opp.score / 2;
+        }
+    }
+
+    return sonnebornBergerScore;
+}
+
+const calculateTeamSonnebornBergerScore = async (team, matches) => {
+    let sonnebornBergerScore = 0;
+
+    for (let match of matches) {
+        if (match.team1 === team.id) {
+            if (match.team2) {
+                const oppRes = await db.query(`SELECT score
+                    FROM teams
+                    WHERE id = $1`, [match.team2]);
+                const opp = oppRes.rows[0];
+
+                const matchScores = match.result.split('-');
+
+                if (+matchScores[0] > +matchScores[1]) sonnebornBergerScore += opp.score;
+                else if (+matchScores[0] === +matchScores[1]) sonnebornBergerScore += opp.score / 2;
+            }
+        } else if (match.team2 === team.id) {
+            const oppRes = await db.query(`SELECT score
+                FROM teams
+                WHERE id = $1`, [match.team1]);
+            const opp = oppRes.rows[0];
+
+            const matchScores = match.result.split('-');
+
+            if (+matchScores[1] > +matchScores[0]) sonnebornBergerScore += opp.score;
+            else if (+matchScores[0] === +matchScores[1]) sonnebornBergerScore += opp.score / 2;
         }
     }
 
@@ -283,5 +317,6 @@ module.exports = {
     generatePairings,
     assignTeams,
     averageRating,
-    calculateSonnebornBergerScore
+    calculateSonnebornBergerScore,
+    calculateTeamSonnebornBergerScore
 };

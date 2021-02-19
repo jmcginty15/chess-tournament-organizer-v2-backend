@@ -1,6 +1,8 @@
 const db = require('../db');
 const axios = require('axios');
 const { API_URL } = require('../config');
+const { updateIndRating } = require('../helpers/entries');
+const { averageRating } = require('../helpers/tournaments');
 
 class TeamGame {
     static async schedule(id, schedule) {
@@ -129,6 +131,27 @@ class TeamGame {
         await db.query(`UPDATE team_matches
             SET result = $1
             WHERE id = $2`, [`${team1Score}-${team2Score}`, match.id]);
+
+        const tournRes = await db.query(`SELECT category FROM team_tournaments WHERE id = $1`, [game.tournament]);
+        const tournCategory = tournRes.rows[0].category;
+        const entryResWhite = await db.query(`SELECT player FROM team_entries WHERE id = $1`, [game.white]);
+        const whiteEntry = entryResWhite.rows[0];
+        const entryResBlack = await db.query(`SELECT player FROM team_entries WHERE id = $1`, [game.black]);
+        const blackEntry = entryResBlack.rows[0];
+
+        const whiteRating = await updateIndRating(whiteEntry, tournCategory);
+        const blackRating = await updateIndRating(blackEntry, tournCategory);
+
+        await db.query(`UPDATE team_entries SET rating = $1 WHERE id = $2`, [whiteRating.rating, game.white]);
+        await db.query(`UPDATE team_entries SET rating = $1 WHERE id = $2`, [blackRating.rating, game.black]);
+
+        const team1EntryRes = await db.query(`SELECT rating FROM team_entries WHERE team = $1`, [match.team1]);
+        const team1Players = team1EntryRes.rows;
+        await db.query(`UPDATE teams SET rating = $1 WHERE id = $2`, [averageRating(team1Players), match.team1]);
+
+        const team2EntryRes = await db.query(`SELECT rating FROM team_entries WHERE team = $1`, [match.team2]);
+        const team2Players = team2EntryRes.rows;
+        await db.query(`UPDATE teams SET rating = $1 WHERE id = $2`, [averageRating(team2Players), match.team2]);
 
         return game;
     }

@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const { SECRET_KEY } = require('../config');
 const ExpressError = require('../expressError');
 const IndTournament = require('../models/ind_tournament');
-const IntGame = require('../models/ind_game');
 const IndGame = require('../models/ind_game');
 const TeamGame = require('../models/team_game');
 const Team = require('../models/team');

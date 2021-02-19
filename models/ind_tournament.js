@@ -59,7 +59,8 @@ class IndTournament {
                 registration_open AS "registrationOpen",
                 registration_close AS "registrationClose",
                 start_date AS "startDate"
-            FROM ind_tournaments`);
+            FROM ind_tournaments
+            ORDER BY start_date DESC`);
         const tournaments = res.rows;
         return tournaments;
     }
@@ -251,20 +252,36 @@ class IndTournament {
         const games = [];
 
         for (let pairing of pairings) {
-            await db.query(`UPDATE ind_entries
-                SET prev_opponents = $1, prev_colors = $2
-                WHERE id = $3`,
-                [pairing.white.prevOpponents, pairing.white.prevColors, pairing.white.id]);
-            await db.query(`UPDATE ind_entries
-                SET prev_opponents = $1, prev_colors = $2
-                WHERE id = $3`,
-                [pairing.black.prevOpponents, pairing.black.prevColors, pairing.black.id]);
+            if (!pairing.bye) {
+                await db.query(`UPDATE ind_entries
+                    SET prev_opponents = $1, prev_colors = $2
+                    WHERE id = $3`,
+                    [pairing.white.prevOpponents, pairing.white.prevColors, pairing.white.id]);
+                await db.query(`UPDATE ind_entries
+                    SET prev_opponents = $1, prev_colors = $2
+                    WHERE id = $3`,
+                    [pairing.black.prevOpponents, pairing.black.prevColors, pairing.black.id]);
 
-            const gameRes = await db.query(`INSERT INTO ind_games (round, white, black, tournament)
-                VALUES ($1, $2, $3, $4)
-                RETURNING id, round, white, black, tournament, result`,
-                [nextRound, pairing.white.id, pairing.black.id, id]);
-            games.push(gameRes.rows[0]);
+                const gameRes = await db.query(`INSERT INTO ind_games (round, white, black, tournament)
+                    VALUES ($1, $2, $3, $4)
+                    RETURNING id, round, white, black, tournament`,
+                    [nextRound, pairing.white.id, pairing.black.id, id]);
+                games.push(gameRes.rows[0]);
+            } else {
+                const currentScoreRes = await db.query(`SELECT score
+                    FROM ind_entries
+                    WHERE id = $1`, [pairing.bye.id]);
+                await db.query(`UPDATE ind_entries
+                    SET score = $1, prev_opponents = $2, prev_colors = $3
+                    WHERE id = $4`,
+                    [currentScoreRes.rows[0].score + 1, pairing.bye.prevOpponents, pairing.bye.prevColors, pairing.bye.id]);
+
+                const gameRes = await db.query(`INSERT INTO ind_games (round, white, black, tournament, result)
+                    VALUES ($1, $2, $3, $4, $5)
+                    RETURNING id, round, white, black, tournament, result`,
+                    [nextRound, pairing.bye.id, null, id, '1-0']);
+                games.push(gameRes.rows[0]);
+            }
         }
 
         const finalTournRes = await db.query(`UPDATE ind_tournaments
@@ -328,7 +345,7 @@ class IndTournament {
                 WHERE id = $2
                 RETURNING place`,
                 [i + 1, entries[i].id]);
-            entries.place = nextRes.rows[0].place;
+            entries[i].place = nextRes.rows[0].place;
         }
 
         return entries;
@@ -413,7 +430,7 @@ class IndTournament {
             WHERE id = $2`, [1, id])
 
         return finalEntries;
-    }  
+    }
 }
 
 module.exports = IndTournament;

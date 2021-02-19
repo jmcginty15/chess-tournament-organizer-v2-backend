@@ -1,6 +1,7 @@
 const db = require('../db');
 const axios = require('axios');
 const { API_URL } = require('../config');
+const { updateIndRating } = require('../helpers/entries');
 
 const ExpressError = require('../expressError');
 
@@ -93,6 +94,19 @@ class IndGame {
                 SET score = $1
                 WHERE id = $2`, [currentScore + blackScore, game.black]);
         }
+
+        const tournRes = await db.query(`SELECT category FROM ind_tournaments WHERE id = $1`, [game.tournament]);
+        const tournCategory = tournRes.rows[0].category;
+        const whiteRes = await db.query(`SELECT player FROM ind_entries WHERE id = $1`, [game.white]);
+        const white = whiteRes.rows[0];
+        const blackRes = await db.query(`SELECT player FROM ind_entries WHERE id = $1`, [game.black]);
+        const black = blackRes.rows[0];
+
+        const whiteRating = await updateIndRating(white, tournCategory);
+        const blackRating = await updateIndRating(black, tournCategory);
+
+        await db.query(`UPDATE ind_entries SET rating = $1 WHERE id = $2`, [whiteRating.rating, game.white]);
+        await db.query(`UPDATE ind_entries SET rating = $1 WHERE id = $2`, [blackRating.rating, game.black]);
 
         return game;
     }

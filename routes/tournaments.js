@@ -129,6 +129,18 @@ router.post('/ind/:id/end_round', ensureTournamentDirector, async function (req,
     }
 });
 
+router.post('/team/:id/end_round', ensureTournamentDirector, async function (req, res, next) {
+    try {
+        const { id } = req.params;
+        await TeamTournament.recordDoubleForfeits(id);
+        await TeamTournament.updatePlaces(id);
+        const tournament = await TeamTournament.generateNextRound(id);
+        return res.json({ tournament: tournament });
+    } catch (err) {
+        return next(err);
+    }
+});
+
 router.post('/ind/:id/end_tournament', ensureTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
@@ -136,6 +148,18 @@ router.post('/ind/:id/end_tournament', ensureTournamentDirector, async function 
         await IndTournament.calculateSonnebornBergerScores(id);
         const entries = await IndTournament.setFinalPlaces(id);
         return res.json({ entries: entries });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.post('/team/:id/end_tournament', ensureTournamentDirector, async function (req, res, next) {
+    try {
+        const { id } = req.params;
+        await TeamTournament.recordDoubleForfeits(id);
+        await TeamTournament.calculateSonnebornBergerScores(id);
+        const teams = await TeamTournament.setFinalPlaces(id);
+        return res.json({ teams: teams });
     } catch (err) {
         return next(err);
     }
