@@ -67,6 +67,11 @@ class TeamTournament {
         return tournament;
     }
 
+    static async delete(id) {
+        await db.query(`DELETE FROM team_tournaments WHERE id = $1`, [id]);
+        return 'deleted';
+    }
+
     static async getAll() {
         const res = await db.query(`SELECT
                 id,

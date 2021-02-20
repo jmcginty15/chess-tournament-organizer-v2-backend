@@ -4,7 +4,7 @@ const TeamTournament = require('../models/team_tournament');
 const jsonschema = require('jsonschema');
 const newIndTournamentSchema = require('../schemas/indTournamentNew.json');
 const newTeamTournamentSchema = require('../schemas/teamTournamentNew.json');
-const { ensureLoggedIn, ensureCorrectUser, ensureTournamentDirector } = require('../middleware/auth');
+const { ensureLoggedIn, ensureCorrectUser, ensureTournamentDirector, ensureTeamTournamentDirector } = require('../middleware/auth');
 
 const ExpressError = require('../expressError');
 
@@ -104,7 +104,7 @@ router.post('/ind/:id/initialize', ensureTournamentDirector, async function (req
     }
 });
 
-router.post('/team/:id/initialize', ensureTournamentDirector, async function (req, res, next) {
+router.post('/team/:id/initialize', ensureTeamTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
         await TeamTournament.updateAllRatings(id);
@@ -129,7 +129,7 @@ router.post('/ind/:id/end_round', ensureTournamentDirector, async function (req,
     }
 });
 
-router.post('/team/:id/end_round', ensureTournamentDirector, async function (req, res, next) {
+router.post('/team/:id/end_round', ensureTeamTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
         await TeamTournament.recordDoubleForfeits(id);
@@ -153,13 +153,33 @@ router.post('/ind/:id/end_tournament', ensureTournamentDirector, async function 
     }
 });
 
-router.post('/team/:id/end_tournament', ensureTournamentDirector, async function (req, res, next) {
+router.post('/team/:id/end_tournament', ensureTeamTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
         await TeamTournament.recordDoubleForfeits(id);
         await TeamTournament.calculateSonnebornBergerScores(id);
         const teams = await TeamTournament.setFinalPlaces(id);
         return res.json({ teams: teams });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.delete('/ind/:id', ensureTournamentDirector, async function (req, res, next) {
+    try {
+        const { id } = req.params;
+        const message = await IndTournament.delete(id);
+        return res.json({ message: message });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.delete('/team/:id', ensureTeamTournamentDirector, async function (req, res, next) {
+    try {
+        const { id } = req.params;
+        const message = await TeamTournament.delete(id);
+        return res.json({ message: message });
     } catch (err) {
         return next(err);
     }

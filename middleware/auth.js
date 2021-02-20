@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { SECRET_KEY } = require('../config');
 const ExpressError = require('../expressError');
 const IndTournament = require('../models/ind_tournament');
+const TeamTournament = require('../models/team_tournament');
 const IndGame = require('../models/ind_game');
 const TeamGame = require('../models/team_game');
 const Team = require('../models/team');
@@ -38,6 +39,17 @@ const ensureTournamentDirector = async (req, res, next) => {
     try {
         const { id } = req.params;
         const tournament = await IndTournament.getById(id);
+        if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 404);
+        return next();
+    } catch (err) {
+        return next(err);
+    }
+}
+
+const ensureTeamTournamentDirector = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const tournament = await TeamTournament.getById(id);
         if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 404);
         return next();
     } catch (err) {
@@ -87,6 +99,7 @@ module.exports = {
     ensureLoggedIn,
     ensureCorrectUser,
     ensureTournamentDirector,
+    ensureTeamTournamentDirector,
     ensureGameParticipant,
     ensureTeamGameParticipant,
     ensureTeamMember
