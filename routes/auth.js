@@ -3,6 +3,7 @@ const User = require('../models/user');
 const jsonschema = require('jsonschema');
 const newUserSchema = require('../schemas/userNew.json');
 const { createToken } = require('../helpers/auth');
+const { DB_URI } = require('../config');
 
 const ExpressError = require('../expressError');
 
@@ -29,6 +30,10 @@ router.post('/register', async function (req, res, next) {
     } catch (err) {
         return next(err);
     }
+});
+
+router.get('/test', async function (req, res, next) {
+    return res.json({ URL: DB_URI });
 });
 
 module.exports = router;
