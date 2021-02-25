@@ -31,8 +31,4 @@ router.post('/register', async function (req, res, next) {
     }
 });
 
-router.get('/test', async function (req, res, next) {
-    return res.json({ MESSAGE: 'working' });
-});
-
 module.exports = router;

@@ -2,7 +2,6 @@ const db = require('../db');
 const bcrypt = require('bcrypt');
 const ExpressError = require('../expressError');
 const { BCRYPT_WORK_FACTOR } = require('../config');
-const { password } = require('../db');
 
 class User {
     static async getByUsername(username) {
