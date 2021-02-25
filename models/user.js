@@ -34,10 +34,7 @@ class User {
                 last_name AS "lastName"`,
             [username, email, hashedPassword, firstName, lastName]);
         const user = userResult.rows[0];
-        user.firstName = user.first_name;
-        delete user.first_name;
-        user.lastName = user.last_name;
-        delete user.last_name;
+
         return user;
     }
 
@@ -81,10 +78,6 @@ class User {
                 last_name AS "lastName"
             FROM users WHERE username = $1`, [username]);
         const user = result.rows[0];
-        user.firstName = user.first_name;
-        delete user.first_name;
-        user.lastName = user.last_name;
-        delete user.last_name;
 
         if (user) {
             const valid = await bcrypt.compare(password, user.password);
