@@ -20,6 +20,8 @@ router.post('/login', async function (req, res, next) {
 
 router.post('/register', async function (req, res, next) {
     try {
+        console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+        console.log('route hit');
         const validUser = jsonschema.validate(req.body, newUserSchema);
         if (!validUser.valid) throw new ExpressError('Bad request', 400);
 
