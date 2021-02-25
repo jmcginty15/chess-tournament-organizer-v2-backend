@@ -32,8 +32,4 @@ router.post('/register', async function (req, res, next) {
     }
 });
 
-router.get('/test', async function (req, res, next) {
-    return res.json({ URL: DB_URI });
-});
-
 module.exports = router;
