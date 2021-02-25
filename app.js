@@ -52,5 +52,8 @@ app.use(function (err, req, res, next) {
     });
 });
 
+app.get('/', function (req, res, next) {
+    res.json({ MESSAGE: 'working' });
+});
 
 module.exports = app;
