@@ -6,7 +6,7 @@ const cors = require('cors');
 const { authenticateJWT } = require('./middleware/auth');
 const app = express();
 
-app.use(cors());
+app.use(cors({ credentials: true }));
 app.use(express.json());
 // app.use(function (req, res, next) {
 //     res.header('Access-Control-Allow-Origin', 'https://flexchess.surge.sh');
