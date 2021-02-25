@@ -53,7 +53,7 @@ app.use(function (err, req, res, next) {
 });
 
 app.get('/', function (req, res, next) {
-    res.json({ MESSAGE: 'working' });
+    return res.json({ MESSAGE: 'working' });
 });
 
 module.exports = app;

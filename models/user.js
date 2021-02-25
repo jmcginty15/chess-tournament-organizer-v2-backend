@@ -20,8 +20,6 @@ class User {
     }
 
     static async register({ username, email, password, firstName, lastName }) {
-        console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-        console.log('In register method');
         const dupUsernameCheck = await db.query(`SELECT username FROM users WHERE username = $1`, [username]);
         if (dupUsernameCheck.rows.length) throw new ExpressError('Duplicate username', 400);
         const dupEmailCheck = await db.query(`SELECT username FROM users WHERE email = $1`, [email]);
