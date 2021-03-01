@@ -198,6 +198,21 @@ class TeamTournament {
         return entry;
     }
 
+    static async removeExtraPlayers(id) {
+        const tournament = await TeamTournament.getById(id);
+        const extraPlayers = tournament.entries.length % tournament.teamSize;
+
+        const entryRes = await db.query(`SELECT team_entries.id FROM team_entries
+            JOIN teams ON teams.id = team_entries.team
+            WHERE teams.tournament = $1
+            ORDER BY team_entries.id DESC
+            LIMIT $2`,
+            [id, extraPlayers]);
+        const removedPlayers = entryRes.rows;
+
+        for (let player of removedPlayers) await db.query(`DELETE FROM team_entries WHERE id = $1`, [player.id]);
+    }
+
     static async updateAllRatings(id) {
         const tournRes = await db.query(`SELECT category FROM team_tournaments WHERE id = $1`, [id]);
         const { category } = tournRes.rows[0];

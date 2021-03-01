@@ -1,0 +1,1 @@
+UPDATE team_tournaments SET registration_close = '2021-03-08T00:00:00Z' WHERE id = 2;

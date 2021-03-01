@@ -23,6 +23,7 @@ INSERT INTO users (username, email, password, first_name, last_name)
          ('something', 'something@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Something', 'Something'),
          ('helloworld', 'hello_world@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Hello', 'World'),
          ('EricRosen', 'eric_rosen@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Eric', 'Rosen'),
+         ('chessbrah', 'chess_brah@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Chess', 'Brah'),
          ('rando3', 'rando3@yahoo.com', '$2b$13$PTz98VZhd.mY0QIhl2yzTu/rkfHmtJkP83ALlcn3xZxK0dxD1trb6', 'Rando', 'Three');
 
 INSERT INTO ind_tournaments (director,
@@ -195,4 +196,5 @@ INSERT INTO team_entries (player, team, rating)
          ('DrDrunkenstein', 2, 2876),
          ('Fins', 2, 2468),
          ('GothamChess', 2, 2442),
+         ('chessbrah', 2, 1500),
          ('GaryChess', 2, 1884);

@@ -107,6 +107,7 @@ router.post('/ind/:id/initialize', ensureTournamentDirector, async function (req
 router.post('/team/:id/initialize', ensureTeamTournamentDirector, async function (req, res, next) {
     try {
         const { id } = req.params;
+        await TeamTournament.removeExtraPlayers(id);
         await TeamTournament.updateAllRatings(id);
         await TeamTournament.assignTeams(id);
         await TeamTournament.assignSeeds(id);
