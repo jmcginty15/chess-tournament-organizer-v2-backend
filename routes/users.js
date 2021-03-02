@@ -8,6 +8,10 @@ const ExpressError = require('../expressError');
 
 const router = new express.Router();
 
+/** GET /:username
+ * => { user: { username, email, firstName, lastName } }
+ */
+
 router.get('/:username', async function (req, res, next) {
     try {
         const { username } = req.params;
@@ -17,6 +21,10 @@ router.get('/:username', async function (req, res, next) {
         return next(err);
     }
 });
+
+/** GET /:username/tournaments
+ * => { tournaments: [{ id, name, director, timeControl, category, minPlayers, maxPlayers, rounds, roundLength, currentRound, registrationOpen, registrationClose, startDate, started, ended }, ...] }
+ */
 
 router.get('/:username/tournaments', async function (req, res, next) {
     try {
@@ -28,6 +36,10 @@ router.get('/:username/tournaments', async function (req, res, next) {
     }
 });
 
+/** GET /:username/tournaments/ongoing
+ * => { tournaments: [{ id, name, director, timeControl, category, minPlayers, maxPlayers, rounds, roundLength, currentRound, registrationOpen, registrationClose, startDate, started, ended }, ...] }
+ */
+
 router.get('/:username/tournaments/ongoing', async function (req, res, next) {
     try {
         const { username } = req.params;
@@ -38,6 +50,10 @@ router.get('/:username/tournaments/ongoing', async function (req, res, next) {
     }
 });
 
+/** GET /:username/directed_tournaments
+ * => { tournaments: [{ id, name, director, timeControl, category, minPlayers, maxPlayers, rounds, roundLength, currentRound, registrationOpen, registrationClose, startDate, started, ended }, ...] }
+ */
+
 router.get('/:username/directed_tournaments', async function (req, res, next) {
     try {
         const { username } = req.params;
@@ -47,6 +63,10 @@ router.get('/:username/directed_tournaments', async function (req, res, next) {
         return next(err);
     }
 });
+
+/** PATCH /:username/update
+ * { username, password, email, firstName, lastName } => { username, email, firstName, lastName }
+ */
 
 router.patch('/:username/update', async function (req, res, next) {
     try {

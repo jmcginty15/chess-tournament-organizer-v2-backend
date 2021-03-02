@@ -4,8 +4,10 @@ const { API_URL } = require('../config');
 const { updateIndRating } = require('../helpers/entries');
 const { averageRating } = require('../helpers/tournaments');
 
+// Game in a team tournament
 class TeamGame {
     static async schedule(id, schedule) {
+        /** Schedules a game */
         const gameRes = await db.query(`UPDATE team_games
             SET schedule = $1
             WHERE id = $2
@@ -32,6 +34,7 @@ class TeamGame {
     }
 
     static async getParticipants(id) {
+        /** Returns the participants in a game */
         const gameRes = await db.query(`SELECT white, black
             FROM team_games
             WHERE id = $1`, [id]);
@@ -51,6 +54,7 @@ class TeamGame {
     }
 
     static async report(id, lichessId) {
+        /** Gets the results of a game from the Lichess API */
         const lichessRes = await axios.get(`${API_URL}/game/export/${lichessId}`);
         const gameData = lichessRes.data;
 
@@ -66,6 +70,7 @@ class TeamGame {
                 white,
                 black,
                 match,
+                result,
                 url,
                 schedule`,
             [result, `${API_URL}/${lichessId}`, id]);

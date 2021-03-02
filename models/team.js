@@ -1,8 +1,10 @@
 const db = require('../db');
 const ExpressError = require('../expressError');
 
+// Team
 class Team {
     static async getById(id) {
+        /** Gets a single team by id */
         const teamRes = await db.query(`SELECT
                 id,
                 name,
@@ -28,6 +30,7 @@ class Team {
     }
 
     static async rename(id, newName) {
+        /** Updates a team's name */
         const teamRes = await db.query(`UPDATE teams
             SET name = $1
             WHERE id = $2

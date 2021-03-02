@@ -3,9 +3,11 @@ const IndGame = require('../models/ind_game');
 const TeamGame = require('../models/team_game');
 const { ensureGameParticipant, ensureTeamGameParticipant } = require('../middleware/auth');
 
-const ExpressError = require('../expressError');
-
 const router = new express.Router();
+
+/** POST /ind/:id/schedule
+ * { schedule } => { id, round, white, black, tournament, result, schedule }
+ */
 
 router.post('/ind/:id/schedule', ensureGameParticipant, async function (req, res, next) {
     try {
@@ -17,6 +19,10 @@ router.post('/ind/:id/schedule', ensureGameParticipant, async function (req, res
     }
 });
 
+/** POST /team/:id/schedule
+ * { schedule } => { id, white, black, match, result, schedule }
+ */
+
 router.post('/team/:id/schedule', ensureTeamGameParticipant, async function (req, res, next) {
     try {
         const { id } = req.params;
@@ -27,6 +33,10 @@ router.post('/team/:id/schedule', ensureTeamGameParticipant, async function (req
     }
 });
 
+/** POST /ind/:id/report
+ * { lichessId } => { id, round, white, black, tournament, result, url, schedule }
+ */
+
 router.post('/ind/:id/report', ensureGameParticipant, async function (req, res, next) {
     try {
         const { id } = req.params;
@@ -36,6 +46,10 @@ router.post('/ind/:id/report', ensureGameParticipant, async function (req, res, 
         return next(err);
     }
 });
+
+/** POST /team/:id/report
+ * { lichessId } => { id, white, black, match, result, url, schedule }
+ */
 
 router.post('/team/:id/report', ensureTeamGameParticipant, async function (req, res, next) {
     try {

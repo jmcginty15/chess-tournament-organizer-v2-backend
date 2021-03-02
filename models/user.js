@@ -3,8 +3,10 @@ const bcrypt = require('bcrypt');
 const ExpressError = require('../expressError');
 const { BCRYPT_WORK_FACTOR } = require('../config');
 
+// User
 class User {
     static async getByUsername(username) {
+        /** Gets a single user by username */
         const res = await db.query(`SELECT
             username,
             email,
@@ -19,6 +21,7 @@ class User {
     }
 
     static async register({ username, email, password, firstName, lastName }) {
+        /** Registers a new user */
         const dupUsernameCheck = await db.query(`SELECT username FROM users WHERE username = $1`, [username]);
         if (dupUsernameCheck.rows.length) throw new ExpressError('Duplicate username', 400);
         const dupEmailCheck = await db.query(`SELECT username FROM users WHERE email = $1`, [email]);
@@ -39,6 +42,7 @@ class User {
     }
 
     static async update(username, userInfo) {
+        /** Updates user info */
         if (userInfo.password) userInfo.password = await bcrypt.hash(userInfo.password, BCRYPT_WORK_FACTOR);
 
         const keys = Object.keys(userInfo);
@@ -70,10 +74,10 @@ class User {
     }
 
     static async login(username, password) {
+        /** Logs in a user */
         const result = await db.query(`SELECT
                 username,
                 email,
-                password,
                 first_name AS "firstName",
                 last_name AS "lastName"
             FROM users WHERE username = $1`, [username]);
@@ -81,16 +85,14 @@ class User {
 
         if (user) {
             const valid = await bcrypt.compare(password, user.password);
-            if (valid) {
-                delete user.password;
-                return user;
-            }
+            if (valid) return user;
         }
 
         throw new ExpressError('Invalid username or password', 401);
     }
 
     static async getTournaments(username) {
+        /** Gets the tournaments a user has entered */
         const indResult = await db.query(`SELECT
                 ind_tournaments.id,
                 ind_tournaments.name,
@@ -141,6 +143,7 @@ class User {
     }
 
     static async getOngoingTournaments(username) {
+        /** Gets the tournaments a uesr is currently playing in */
         const indResult = await db.query(`SELECT
                 ind_tournaments.id,
                 ind_tournaments.name,
@@ -191,6 +194,7 @@ class User {
     }
 
     static async getDirectedTournaments(username) {
+        /** Gets the tournaments a user has directed */
         const indResult = await db.query(`SELECT
                 id,
                 name,

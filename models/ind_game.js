@@ -5,8 +5,10 @@ const { updateIndRating } = require('../helpers/entries');
 
 const ExpressError = require('../expressError');
 
+// Game in an individual tournament
 class IndGame {
     static async schedule(id, schedule) {
+        /** Schedules a game */
         const res = await db.query(`UPDATE ind_games
             SET schedule = $1
             WHERE id = $2
@@ -26,6 +28,7 @@ class IndGame {
     }
 
     static async getParticipants(id) {
+        /** Returns the participants in a game */
         const gameRes = await db.query(`SELECT white, black
             FROM ind_games
             WHERE id = $1`, [id]);
@@ -45,6 +48,7 @@ class IndGame {
     }
 
     static async report(id, lichessId) {
+        /** Gets the results of a game from the Lichess API */
         const lichessRes = await axios.get(`${API_URL}/game/export/${lichessId}`);
         const gameData = lichessRes.data;
 
@@ -61,6 +65,7 @@ class IndGame {
                 white,
                 black,
                 tournament,
+                result,
                 url,
                 schedule`,
             [result, `${API_URL}/${lichessId}`, id]);

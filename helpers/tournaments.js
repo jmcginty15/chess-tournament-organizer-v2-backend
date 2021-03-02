@@ -2,6 +2,7 @@ const { cloneDeep } = require('lodash');
 const db = require('../db');
 
 const batchify = (entries, batchSize) => {
+    /** Sorts entries into batches so ratings can be requested from the Lichess API */
     const batches = [];
     while (entries.length > batchSize) batches.push(entries.splice(0, batchSize));
     if (entries.length) batches.push(entries);
@@ -9,6 +10,7 @@ const batchify = (entries, batchSize) => {
 }
 
 const unbatchify = (batches) => {
+    /** Extracts entries from batches back into a single array after ratings have been obtained from the Lichess API */
     let entries = [];
     let i = 0;
     while (i < batches.length) {
@@ -19,6 +21,7 @@ const unbatchify = (batches) => {
 }
 
 const delay = (ms) => {
+    /** Implements a delay to be used between API request batches to avoid exceeding Lichess's rate limit */
     const now = new Date;
     let later = null;
     do later = new Date;
@@ -26,6 +29,7 @@ const delay = (ms) => {
 }
 
 const getCategory = (timeControl) => {
+    /** Converts the tournament time control to a category name */
     const [startingTimeStr, incrementStr] = timeControl.split('|');
     const startingTime = parseFloat(startingTimeStr);
     const increment = parseFloat(incrementStr);
@@ -42,11 +46,13 @@ const getCategory = (timeControl) => {
 }
 
 const getRating = (ratings, category) => {
+    /** Extracts a player's rating for the appropriate category from the Lichess API response */
     const rating = ratings[category].rating;
     return rating;
 }
 
 const assignInitialPlaces = (entries) => {
+    /** Seeds players or teams for a tournament according to rating */
     const groupCount = Math.floor(entries.length / 2);
     const groups = [];
     for (let i = 0; i < groupCount; i++) groups.push([]);
@@ -119,6 +125,7 @@ const generatePairings = (entries, nextRound) => {
             // if the color balances for each player are not compatible, it is not an allowable pairing
             // increment the index and continue to the next entry
             // the algorithm keeps the color balance for all players always between -2 and 2
+            // colorBalance = whiteGames - blackGames
             const nextPrevColors = nextEntry.prevColors.split(',');
             nextEntry.colorBalance = getColorBalance(nextPrevColors);
             let compatible = true;
@@ -163,7 +170,8 @@ const generatePairings = (entries, nextRound) => {
             p2.prevOpponents += `${comma}${p1.id}`;
         }
 
-        // if color balances are unequal, give the white pieces to the player with the lesser color balance
+        // if color balances are unequal
+        // give the white pieces to the player with the lesser color balance
         if (p1.colorBalance > p2.colorBalance) {
             finalPairings.push({ white: p2, black: p1 });
             p1.prevColors += `${comma}B`;
@@ -176,9 +184,9 @@ const generatePairings = (entries, nextRound) => {
         }
 
         // if color balances are equal
-        // give the white pieces to the higher ranked player on rounds 1, 4, 5, 8, 9, 12, 13, ...
         if (p1.colorBalance === p2.colorBalance) {
             if (nextRound % 4 === 0 || (nextRound - 1) % 4 === 0) {
+                // give the white pieces to the higher ranked player on rounds 1, 4, 5, 8, 9, 12, 13, ...
                 finalPairings.push({ white: p1, black: p2 });
                 p1.prevColors += `${comma}W`;
                 p2.prevColors += `${comma}B`;
@@ -196,6 +204,9 @@ const generatePairings = (entries, nextRound) => {
 }
 
 const findBye = (entries) => {
+    /** In the case of a tournament having an odd number of players or teams,
+     * assign a bye for the round to the lowest ranked player or team that has not yet received a bye
+     */
     for (let i = entries.length - 1; i >= 0; i--) if (entries[i].prevOpponents.indexOf('B') === -1) return i;
     return null;
 }
@@ -214,6 +225,7 @@ const getColorBalance = (colorArray) => {
 }
 
 const assignTeams = (entries, teamCount) => {
+    /** For team tournaments, assign players to teams in order to balance teams by rating */
     const teams = [];
     for (let i = 0; i < teamCount; i++) teams.push([]);
 
@@ -233,12 +245,16 @@ const assignTeams = (entries, teamCount) => {
 }
 
 const averageRating = (players) => {
+    /** Calculate a team's rating by taking the average rating of all players on the team */
     let sum = 0;
     for (let player of players) sum += player.rating;
     return sum / players.length;
 }
 
 const isValid = (entries, nextRound) => {
+    /** Check if a set of entries can produce a valid set of pairings for a given round
+     * Recursively calls the generatePairings function
+     */
     try {
         generatePairings(entries, nextRound);
         return true;
@@ -248,6 +264,10 @@ const isValid = (entries, nextRound) => {
 }
 
 const calculateSonnebornBergerScore = async (entry, games) => {
+    /** Calculates a player's Sonneborn-Berger score for purposes of tiebreaking at the end of the tournament.
+     * The current player's Sonneborn-Berger score is the total score of all the players that the current player has
+     * beaten, plus half the score of all the players that the current player has drawn with.
+     */
     let sonnebornBergerScore = 0;
 
     for (let game of games) {
@@ -276,6 +296,10 @@ const calculateSonnebornBergerScore = async (entry, games) => {
 }
 
 const calculateTeamSonnebornBergerScore = async (team, matches) => {
+    /** Calculates a team's Sonneborn-Berger score for purposes of tiebreaking at the end of the tournament.
+     * The current team's Sonneborn-Berger score is the total score of all the teams that the current team has
+     * beaten, plus half the score of all the teams that the current team has drawn with.
+     */
     let sonnebornBergerScore = 0;
 
     for (let match of matches) {

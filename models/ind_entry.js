@@ -2,8 +2,10 @@ const db = require('../db');
 
 const ExpressError = require('../expressError');
 
+// Entry in an individual tournament
 class IndEntry {
     static async getById(id) {
+        /** Gets a single entry by id */
         const res = await db.query(`SELECT
                 id,
                 player,

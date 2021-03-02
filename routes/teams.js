@@ -1,9 +1,12 @@
 const express = require('express');
 const Team = require('../models/team');
 const { ensureTeamMember } = require('../middleware/auth');
-const ExpressError = require('../expressError');
 
 const router = new express.Router();
+
+/** GET /:id
+ * => { id, name, tournament, rating, seed, score, sonnebornBergerScore, place, prevOpponents, prevColots }
+ */
 
 router.get('/:id', async function (req, res, next) {
     try {
@@ -14,6 +17,10 @@ router.get('/:id', async function (req, res, next) {
         return next(err);
     }
 });
+
+/** PATCH /:id/rename
+ * => { id, name, tournament, rating, seed, score, sonnebornBergerScore, place, prevOpponents, prevColots }
+ */
 
 router.patch('/:id/rename', ensureTeamMember, async function (req, res, next) {
     try {

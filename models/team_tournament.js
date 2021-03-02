@@ -18,6 +18,7 @@ const { generateGames } = require('../helpers/matches');
 const { updateIndRating } = require('../helpers/entries');
 const Team = require('./team');
 
+// Team tournament
 class TeamTournament {
     static async create({
         director,
@@ -32,6 +33,7 @@ class TeamTournament {
         registrationClose,
         startDate
     }) {
+        /** Creates a tournament */
         const dupNameCheck = await db.query(`SELECT name FROM team_tournaments WHERE name = $1`, [name]);
         if (dupNameCheck.rows.length) throw new ExpressError('Duplicate name', 400);
         const category = getCategory(timeControl);
@@ -68,11 +70,13 @@ class TeamTournament {
     }
 
     static async delete(id) {
+        /** Deletes a tournament */
         await db.query(`DELETE FROM team_tournaments WHERE id = $1`, [id]);
         return 'deleted';
     }
 
     static async getAll() {
+        /** Gets a list of all team tournaments */
         const res = await db.query(`SELECT
                 id,
                 director,
@@ -93,6 +97,7 @@ class TeamTournament {
     }
 
     static async getById(id) {
+        /** Gets a single tournament by id */
         const tournRes = await db.query(`SELECT
                 id,
                 director,
@@ -170,6 +175,7 @@ class TeamTournament {
     }
 
     static async enter(id, username) {
+        /** Enters a user into a tournament */
         const tournRes = await db.query(`SELECT category FROM team_tournaments WHERE id = $1`, [id]);
         const tournament = tournRes.rows[0];
         if (!tournament) throw new ExpressError(`Tournament id ${id} not found`, 404);
@@ -199,6 +205,9 @@ class TeamTournament {
     }
 
     static async removeExtraPlayers(id) {
+        /** In the case that the number of entries is not an even multiple of the number of players per team,
+         * remove the excess players
+         */
         const tournament = await TeamTournament.getById(id);
         const extraPlayers = tournament.entries.length % tournament.teamSize;
 
@@ -214,6 +223,7 @@ class TeamTournament {
     }
 
     static async updateAllRatings(id) {
+        /** Updates ratings for all players in the tournament */
         const tournRes = await db.query(`SELECT category FROM team_tournaments WHERE id = $1`, [id]);
         const { category } = tournRes.rows[0];
 
@@ -246,6 +256,7 @@ class TeamTournament {
     }
 
     static async assignTeams(id) {
+        /** Assigns players to teams in order to balance teams by rating */
         const tournRes = await db.query(`SELECT
                 id,
                 director,
@@ -328,6 +339,7 @@ class TeamTournament {
     }
 
     static async assignSeeds(id) {
+        /** Assigns seeds to all teams based on rating */
         const res = await db.query(`SELECT
                 id,
                 name,
@@ -359,6 +371,7 @@ class TeamTournament {
     }
 
     static async generateNextRound(id) {
+        /** Generates matches and games for the next round of a tournament */
         const tournRes = await db.query(`SELECT current_round AS "currentRound", team_size AS "teamSize"
             FROM team_tournaments WHERE id = $1`, [id]);
         const nextRound = tournRes.rows[0].currentRound + 1;
@@ -480,6 +493,7 @@ class TeamTournament {
     }
 
     static async recordDoubleForfeits(id) {
+        /** Enters 0-0 results for any games not reports */
         const roundRes = await db.query(`SELECT current_round AS "currentRound"
             FROM team_tournaments
             WHERE id = $1`, [id]);
@@ -512,6 +526,7 @@ class TeamTournament {
     }
 
     static async updatePlaces(id) {
+        /** Updates current rankings for all teams based on score */
         const placeRes = await db.query(`SELECT id FROM teams
             WHERE tournament = $1
             ORDER BY score DESC, seed`, [id]);
@@ -530,6 +545,7 @@ class TeamTournament {
     }
 
     static async calculateSonnebornBergerScores(id) {
+        /** Enters Sonneborn-Berger scores for tiebreaking purposes after the final round */
         const teamRes = await db.query(`SELECT
                 id,
                 name,
@@ -567,6 +583,7 @@ class TeamTournament {
     }
 
     static async setFinalPlaces(id) {
+        /** Updates places based on score and Sonneborn-Berger score after the final round */
         const res = await db.query(`SELECT
                 id,
                 name,

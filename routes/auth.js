@@ -3,11 +3,14 @@ const User = require('../models/user');
 const jsonschema = require('jsonschema');
 const newUserSchema = require('../schemas/userNew.json');
 const { createToken } = require('../helpers/auth');
-const { DB_URI } = require('../config');
 
 const ExpressError = require('../expressError');
 
 const router = new express.Router();
+
+/** POST /login
+ * { username, password } => { username, email, firstName, lastName, _token }
+ */
 
 router.post('/login', async function (req, res, next) {
     try {
@@ -18,6 +21,10 @@ router.post('/login', async function (req, res, next) {
         return next(err);
     }
 });
+
+/** POST /register
+ * { username, password, email, firstName, lastName } => { username, email, firstName, lastName, _token }
+ */
 
 router.post('/register', async function (req, res, next) {
     try {
