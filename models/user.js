@@ -79,7 +79,8 @@ class User {
                 username,
                 email,
                 first_name AS "firstName",
-                last_name AS "lastName"
+                last_name AS "lastName",
+                password
             FROM users WHERE username = $1`, [username]);
         const user = result.rows[0];
 
