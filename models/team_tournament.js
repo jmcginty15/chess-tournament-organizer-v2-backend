@@ -453,8 +453,8 @@ class TeamTournament {
         }
 
         const finalTournRes = await db.query(`UPDATE team_tournaments
-            SET current_round = $1
-            WHERE id = $2
+            SET current_round = $1, started = $2
+            WHERE id = $3
             RETURNING
                 id,
                 director,
@@ -469,8 +469,10 @@ class TeamTournament {
                 current_round AS "currentRound",
                 registration_open AS "registrationOpen",
                 registration_close AS "registrationClose",
-                start_date AS "startDate"`,
-            [nextRound, id]);
+                start_date AS "startDate",
+                started,
+                ended`,
+            [nextRound, 1, id]);
 
         const tournament = finalTournRes.rows[0];
 
