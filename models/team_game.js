@@ -114,8 +114,8 @@ class TeamGame {
         const team1Res = await db.query(`SELECT score
             FROM teams
             WHERE id = $1`, [match.team1]);
-        const currentScore = team1Res.rows[0].score;
-        team1Score += currentScore;
+        const team1CurrentScore = team1Res.rows[0].score;
+        team1Score += team1CurrentScore;
         if (team1Score) {
             await db.query(`UPDATE teams
                 SET score = $1
@@ -125,8 +125,8 @@ class TeamGame {
         const team2Res = await db.query(`SELECT score
             FROM teams
             WHERE id = $1`, [match.team2]);
-        const currentScore = team2Res.rows[0].score;
-        team2Score += currentScore;
+        const team2CurrentScore = team2Res.rows[0].score;
+        team2Score += team2CurrentScore;
         if (team2Score) {
             await db.query(`UPDATE teams
                 SET score = $1
