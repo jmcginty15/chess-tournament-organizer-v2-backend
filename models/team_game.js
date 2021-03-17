@@ -111,11 +111,14 @@ class TeamGame {
             team2Score = whiteScore;
         }
 
-        const [team1MatchScore, team2MatchScore] = match.result.split('-');
-        console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-        console.log(team1MatchScore, team2MatchScore);
+        const matchResult = match.result ? match.result : '0-0';
+        let [team1MatchScore, team2MatchScore] = matchResult.split('-');
         team1MatchScore = parseFloat(team1MatchScore) + team1Score;
         team2MatchScore = parseFloat(team2MatchScore) + team2Score;
+
+        await db.query(`UPDATE team_matches
+            SET result = $1
+            WHERE id = $2`, [`${team1MatchScore}-${team2MatchScore}`, match.id]);
 
         const team1Res = await db.query(`SELECT score
             FROM teams
@@ -138,10 +141,6 @@ class TeamGame {
                 SET score = $1
                 WHERE id = $2`, [team2Score, match.team2]);
         }
-
-        await db.query(`UPDATE team_matches
-            SET result = $1
-            WHERE id = $2`, [`${team1MatchScore}-${team2MatchScore}`, match.id]);
 
         const tournRes = await db.query(`SELECT category FROM team_tournaments WHERE id = $1`, [game.tournament]);
         const tournCategory = tournRes.rows[0].category;
