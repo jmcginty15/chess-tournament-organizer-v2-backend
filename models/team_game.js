@@ -111,6 +111,11 @@ class TeamGame {
             team2Score = whiteScore;
         }
 
+        const matchResultRes = await db.query(`SELECT result FROM team_matches WHERE id = $1`, [match.id]);
+        const [team1MatchScore, team2MatchScore] = matchResultRes.result.split('-');
+        team1MatchScore = parseFloat(team1MatchScore) + team1Score;
+        team2MatchScore = parseFloat(team2MatchScore) + team2Score;
+
         const team1Res = await db.query(`SELECT score
             FROM teams
             WHERE id = $1`, [match.team1]);
@@ -135,7 +140,7 @@ class TeamGame {
 
         await db.query(`UPDATE team_matches
             SET result = $1
-            WHERE id = $2`, [`${team1Score}-${team2Score}`, match.id]);
+            WHERE id = $2`, [`${team1MatchScore}-${team2MatchScore}`, match.id]);
 
         const tournRes = await db.query(`SELECT category FROM team_tournaments WHERE id = $1`, [game.tournament]);
         const tournCategory = tournRes.rows[0].category;
