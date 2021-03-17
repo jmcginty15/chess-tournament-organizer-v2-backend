@@ -85,7 +85,7 @@ class TeamGame {
             blackScore = 0.5;
         }
 
-        const matchRes = await db.query(`SELECT id, team_1 AS "team1", team_2 AS "team2", tournament
+        const matchRes = await db.query(`SELECT id, team_1 AS "team1", team_2 AS "team2", tournament, result
             FROM team_matches
             WHERE id = $1`, [game.match]);
         const match = matchRes.rows[0];
@@ -111,8 +111,7 @@ class TeamGame {
             team2Score = whiteScore;
         }
 
-        const matchResultRes = await db.query(`SELECT result FROM team_matches WHERE id = $1`, [match.id]);
-        const [team1MatchScore, team2MatchScore] = matchResultRes.result.split('-');
+        const [team1MatchScore, team2MatchScore] = match.result.split('-');
         team1MatchScore = parseFloat(team1MatchScore) + team1Score;
         team2MatchScore = parseFloat(team2MatchScore) + team2Score;
 
