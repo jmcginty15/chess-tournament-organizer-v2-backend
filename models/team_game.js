@@ -112,6 +112,8 @@ class TeamGame {
         }
 
         const [team1MatchScore, team2MatchScore] = match.result.split('-');
+        console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+        console.log(team1MatchScore, team2MatchScore);
         team1MatchScore = parseFloat(team1MatchScore) + team1Score;
         team2MatchScore = parseFloat(team2MatchScore) + team2Score;
 
