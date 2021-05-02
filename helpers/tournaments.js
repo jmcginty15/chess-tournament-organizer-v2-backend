@@ -207,7 +207,7 @@ const findBye = (entries) => {
     /** In the case of a tournament having an odd number of players or teams,
      * assign a bye for the round to the lowest ranked player or team that has not yet received a bye
      */
-    for (let i = entries.length - 1; i >= 0; i--) if (entries[i].prevOpponents.indexOf('B') === -1) return i;
+    for (let i = entries.length - 1; i >= 0; i--) if (entries[i].prevColors.indexOf('-') === -1) return i;
     return null;
 }
 
