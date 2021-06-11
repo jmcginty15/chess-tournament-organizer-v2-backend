@@ -1,7 +1,7 @@
 const express = require('express');
 const IndGame = require('../models/ind_game');
 const TeamGame = require('../models/team_game');
-const { ensureGameParticipant, ensureTeamGameParticipant } = require('../middleware/auth');
+const { ensureGameParticipant, ensureTeamGameParticipant, ensureTournamentDirector } = require('../middleware/auth');
 
 const router = new express.Router();
 
@@ -55,6 +55,34 @@ router.post('/team/:id/report', ensureTeamGameParticipant, async function (req, 
     try {
         const { id } = req.params;
         const game = await TeamGame.report(id, req.body.lichessId);
+        return res.json({ game });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+/** POST /ind/:id/forfeit
+ * { winner } => { id, round, white, black, tournament, result, url, schedule }
+ */
+
+router.post('/ind/:id/forfeit', ensureTournamentDirector, async function(req, res, next) {
+    try {
+        const { id } = req.params;
+        const game = await IndGame.forfeit(id, req.body.winner);
+        return res.json({ game });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+/** POST /team/:id/forfeit
+ * { winner } => { id, white, black, match, result, url, schedule }
+ */
+
+router.post('/team/:id/forfeit', ensureTournamentDirector, async function (req, res, next) {
+    try {
+        const { id } = req.params;
+        const game = await TeamGame.forfeit(id, req.body.winner);
         return res.json({ game });
     } catch (err) {
         return next(err);
