@@ -6,6 +6,15 @@ const { averageRating } = require('../helpers/tournaments');
 
 // Game in a team tournament
 class TeamGame {
+    static async getById(id) {
+        /** Gets a game by id */
+        const res = await db.query(`SELECT * FROM team_games`);
+        const game = res.rows[0];
+        
+        if (game) return game;
+        throw new ExpressError(`Game id ${id} not found`, 404);
+    }
+
     static async schedule(id, schedule) {
         /** Schedules a game */
         const gameRes = await db.query(`UPDATE team_games
@@ -199,7 +208,24 @@ class TeamGame {
 
             const winnerScoreRes = await db.query(`SELECT score FROM teams WHERE id = $1`, [winnerTeam]);
             const winnerScore = winnerScoreRes.rows[0].score;
-            await db.query(`UPDATE teams SET score = $1 WHERE id = $2`, [winnerScore + 1, winnerId]);
+            await db.query(`UPDATE teams SET score = $1 WHERE id = $2`, [winnerScore + 1, winnerTeam]);
+
+            const matchRes = await db.query(`SELECT id, team_1 AS "team1", team_2 AS "team2", tournament, result
+                FROM team_matches
+                WHERE id = $1`, [game.match]);
+            const match = matchRes.rows[0];
+            game.tournament = match.tournament;
+
+            const team1Score = winnerTeam === match.team1 ? 1 : 0;
+            const team2Score = winnerTeam === match.team2 ? 1 : 0;
+            const matchResult = match.result ? match.result : '0-0';
+            let [team1MatchScore, team2MatchScore] = matchResult.split('-');
+            team1MatchScore = parseFloat(team1MatchScore) + team1Score;
+            team2MatchScore = parseFloat(team2MatchScore) + team2Score;
+
+            await db.query(`UPDATE team_matches
+                SET result = $1
+                WHERE id = $2`, [`${team1MatchScore}-${team2MatchScore}`, match.id]);
 
             return game;
         }

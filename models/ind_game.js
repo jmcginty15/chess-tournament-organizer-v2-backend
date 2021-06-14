@@ -7,6 +7,15 @@ const ExpressError = require('../expressError');
 
 // Game in an individual tournament
 class IndGame {
+    static async getById(id) {
+        /** Gets a game by id */
+        const res = await db.query(`SELECT * FROM ind_games`);
+        const game = res.rows[0];
+        
+        if (game) return game;
+        throw new ExpressError(`Game id ${id} not found`, 404);
+    }
+
     static async schedule(id, schedule) {
         /** Schedules a game */
         const res = await db.query(`UPDATE ind_games

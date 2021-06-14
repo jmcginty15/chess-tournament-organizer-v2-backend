@@ -5,6 +5,7 @@ const IndTournament = require('../models/ind_tournament');
 const TeamTournament = require('../models/team_tournament');
 const IndGame = require('../models/ind_game');
 const TeamGame = require('../models/team_game');
+const Match = require('../models/match');
 const Team = require('../models/team');
 
 const authenticateJWT = (req, res, next) => {
@@ -41,9 +42,16 @@ const ensureCorrectUser = (req, res, next) => {
 const ensureTournamentDirector = async (req, res, next) => {
     /** Throws an error if the token sent with the request does not belong to the director of the tournament */
     try {
-        const { id } = req.params;
-        const tournament = await IndTournament.getById(id);
-        if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 401);
+        if (req.params.id) {
+            const { id } = req.params;
+            const tournament = await IndTournament.getById(id);
+            if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 401);
+        } else if (req.params.gameId) {
+            const { gameId } = req.params;
+            const game = await IndGame.getById(gameId);
+            const tournament = await IndTournament.getById(game.tournament);
+            if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 401);
+        }
         return next();
     } catch (err) {
         return next(err);
@@ -53,9 +61,17 @@ const ensureTournamentDirector = async (req, res, next) => {
 const ensureTeamTournamentDirector = async (req, res, next) => {
     /** Throws an error if the token sent with the request does not belong to the director of the team tournament */
     try {
-        const { id } = req.params;
-        const tournament = await TeamTournament.getById(id);
-        if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 404);
+        if (req.params.id) {
+            const { id } = req.params;
+            const tournament = await TeamTournament.getById(id);
+            if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 404);
+        } else if (req.params.gameId) {
+            const { gameId } = req.params;
+            const game = await TeamGame.getById(gameId);
+            const match = await Match.getById(game.match);
+            const tournament = await TeamTournament.getById(match.tournament);
+            if (!req.user || req.user.username !== tournament.director) throw new ExpressError('Unauthorized', 404);
+        }
         return next();
     } catch (err) {
         return next(err);
