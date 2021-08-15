@@ -101,8 +101,8 @@ const generatePairings = (entries, nextRound) => {
         const e1 = entries.shift();
         const prevOpponents = e1.prevOpponents.split(',');
         const prevColors = e1.prevColors.split(',');
+        console.log(prevOpponents, prevColors);
         e1.colorBalance = getColorBalance(prevColors);
-        console.log('GET COLOR BALANCE PASSED');
 
         let e2 = null;
         let i = 0;
