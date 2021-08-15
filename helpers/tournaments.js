@@ -149,10 +149,10 @@ const generatePairings = (entries, nextRound) => {
 
             // if remainder is valid, choose the current entry as the second of the pair
             e2 = entries.splice(i, 1)[0];
+            console.log(e1, e2);
             break;
         }
 
-        console.log(e1, e2);
         pairings.push([e1, e2]);
     }
 
