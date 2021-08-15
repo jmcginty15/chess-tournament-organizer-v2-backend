@@ -107,6 +107,7 @@ const generatePairings = (entries, nextRound) => {
         let i = 0;
         while (i < entries.length) {
             const nextEntry = entries[i];
+            console.log(e1, nextEntry);
 
             // if e1 has already played nextEntry, it is not an allowable pairing
             // increment the index and continue to the next entry
@@ -149,7 +150,6 @@ const generatePairings = (entries, nextRound) => {
 
             // if remainder is valid, choose the current entry as the second of the pair
             e2 = entries.splice(i, 1)[0];
-            console.log(e1, e2);
             break;
         }
 
