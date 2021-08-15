@@ -99,9 +99,10 @@ const generatePairings = (entries, nextRound) => {
     const pairings = [];
     while (entries.length) {
         const e1 = entries.shift();
+        console.log(e1.prevOpponents);
+        console.log(e1.prevColors);
         const prevOpponents = e1.prevOpponents.split(',');
         const prevColors = e1.prevColors.split(',');
-        console.log(prevOpponents, prevColors);
         e1.colorBalance = getColorBalance(prevColors);
 
         let e2 = null;
