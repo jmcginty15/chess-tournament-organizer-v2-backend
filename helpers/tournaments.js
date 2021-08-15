@@ -85,10 +85,8 @@ const generatePairings = (entries, nextRound) => {
     // STEP 1:
     // if there is an odd number of entries, give a bye to the lowest-ranked player who has not yet received one
     // remove this entry from the list so they will not receive a pairing
-    console.log(entries.length);
     let byeIndex = null;
     if (entries.length % 2 !== 0) byeIndex = findBye(entries);
-    console.log('FIND BYE PASSED');
     let bye = null;
     if (byeIndex) {
         bye = entries.splice(byeIndex, 1)[0];
@@ -101,6 +99,8 @@ const generatePairings = (entries, nextRound) => {
     const pairings = [];
     while (entries.length) {
         const e1 = entries.shift();
+        console.log(e1);
+        console.log(entries);
         const prevOpponents = e1.prevOpponents.split(',');
         const prevColors = e1.prevColors.split(',');
         e1.colorBalance = getColorBalance(prevColors);
