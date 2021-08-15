@@ -99,11 +99,10 @@ const generatePairings = (entries, nextRound) => {
     const pairings = [];
     while (entries.length) {
         const e1 = entries.shift();
-        console.log(e1);
-        console.log(entries);
         const prevOpponents = e1.prevOpponents.split(',');
         const prevColors = e1.prevColors.split(',');
         e1.colorBalance = getColorBalance(prevColors);
+        console.log('GET COLOR BALANCE PASSED');
 
         let e2 = null;
         let i = 0;
