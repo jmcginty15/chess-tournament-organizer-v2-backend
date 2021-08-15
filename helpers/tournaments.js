@@ -80,7 +80,6 @@ const assignInitialPlaces = (entries) => {
 
 // TCEC Swiss system pairing algorithm
 const generatePairings = (entries, nextRound) => {
-    console.log(entries, nextRound);
     const comma = nextRound === 1 ? '' : ',';
 
     // STEP 1:
@@ -153,6 +152,7 @@ const generatePairings = (entries, nextRound) => {
             break;
         }
 
+        console.log(e1, e2);
         pairings.push([e1, e2]);
     }
 
