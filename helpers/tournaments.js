@@ -101,7 +101,6 @@ const generatePairings = (entries, nextRound) => {
         const e1 = entries.shift();
         const prevOpponents = e1.prevOpponents ? e1.prevOpponents.split(',') : [];
         const prevColors = e1.prevColors ? e1.prevColors.split(',') : [];
-        console.log(prevOpponents, prevColors);
         e1.colorBalance = getColorBalance(prevColors);
 
         let e2 = null;
@@ -127,7 +126,7 @@ const generatePairings = (entries, nextRound) => {
             // increment the index and continue to the next entry
             // the algorithm keeps the color balance for all players always between -2 and 2
             // colorBalance = whiteGames - blackGames
-            const nextPrevColors = nextEntry.prevColors.split(',');
+            const nextPrevColors = e1.prevColors ? nextEntry.prevColors.split(',') : [];
             nextEntry.colorBalance = getColorBalance(nextPrevColors);
             let compatible = true;
             if ((e1.colorBalance === 2 && nextEntry.colorBalance > 0) || (nextEntry.colorBalance === 2 && e1.colorBalance > 0)) compatible = false;
